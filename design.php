@@ -147,8 +147,8 @@ if ($_SESSION['role_id'] == 2) {
             <li><a href="#" class="nav-link text-black link-body-emphasis" onclick="loadPage('role.php')"><i class="fa-solid fa-address-card me-2"></i>List Role</a></li><hr>
             <li><a href="#" class="nav-link text-black link-body-emphasis" onclick="loadPage('user.php')"><i class="fa-solid fa-users me-2"></i>List User</a></li><hr>
             <li><a href="#" class="nav-link text-black link-body-emphasis" onclick="loadPage('kasir.php')"><i class="fa-solid fa-cart-shopping me-2"></i>Kasir</a></li><hr>
-            <li><a href="#" class="nav-link text-black link-body-emphasis" onclick="loadPage('pengeluaran.php')">|<i class="fa-solid fa-file-lines me-2"></i>Pengeluaran</a></li><hr>
-            <li><a href="#" class="nav-link text-black link-body-emphasis" onclick="loadPage('hasil_transaksi.php')">|<i class="fa-solid fa-file-lines me-2"></i>Hasil Transaksi</a></li><hr>
+            <li><a href="#" class="nav-link text-black link-body-emphasis" onclick="loadPage('pengeluaran.php')"><i class="fa-solid fa-money-bill-1 me-2"></i>Pengeluaran</a></li><hr>
+            <li><a href="#" class="nav-link text-black link-body-emphasis" onclick="loadPage('hasil_transaksi.php')"><i class="fa-solid fa-file-lines me-2"></i>Hasil Transaksi</a></li><hr>
         </ul>
         <div class="dropdown ms-auto">
             <a href="#" class="d-flex align-items-center text-black text-decoration-none" data-bs-toggle="dropdown" class="fa-solid fa-right-from-bracket">
