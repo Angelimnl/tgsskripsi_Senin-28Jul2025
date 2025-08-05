@@ -1,13 +1,43 @@
 <?php
 include 'config1.php';
 include 'authcheck.php';
+include 'authcheckrole.php';
+allowRoles([6,1]);
 
-// AMBIL DATA TRANSAKSI + TRANSAKSI DETAIL
+// Ambil tanggal dari form GET (jika ada)
+$tanggal_awal = isset($_GET['tanggal_awal']) ? $_GET['tanggal_awal'] : '';
+$tanggal_akhir = isset($_GET['tanggal_akhir']) ? $_GET['tanggal_akhir'] : '';
+
+// Buat kondisi SQL jika tanggal diisi
+$where = "";
+if (!empty($tanggal_awal) && !empty($tanggal_akhir)) {
+    $tanggal_awal_db = date('Y-m-d', strtotime($tanggal_awal));
+    $tanggal_akhir_db = date('Y-m-d', strtotime($tanggal_akhir));
+    $where = "WHERE DATE(transaksi.created_at) BETWEEN '$tanggal_awal_db' AND '$tanggal_akhir_db'";
+}
+
+// Query transaksi
 $query = $dbconnect->query("
-    SELECT transaksi.* FROM transaksi ORDER BY transaksi.created_at
+    SELECT transaksi.* FROM transaksi 
+    $where
+    ORDER BY transaksi.created_at DESC
 ");
 
+// Hitung total transaksi
+$result_total = $dbconnect->query("SELECT SUM(total) AS total_transaksi FROM transaksi $where");
+$total_transaksi = $result_total->fetch_assoc()['total_transaksi'] ?? 0;
+
+// Hitung total pengeluaran
+$result_pengeluaran = $dbconnect->query("SELECT SUM(jumlah) AS total_pengeluaran FROM pengeluaran $where");
+$total_pengeluaran = $result_pengeluaran->fetch_assoc()['total_pengeluaran'] ?? 0;
+
+// Hitung total pendapatan
+$total_pendapatan = $total_transaksi - $total_pengeluaran;
+
+// Tanggal cetak
+$tanggal_cetak = date('d-m-Y H:i:s');
 ?>
+
 
 <!DOCTYPE html>
 <html>
@@ -30,7 +60,7 @@ $query = $dbconnect->query("
         }
 
         .container {
-            margin-top: 110px;
+            margin-top: 70px;
         }
 
         .btn-custom1 {
@@ -44,12 +74,12 @@ $query = $dbconnect->query("
                 visibility: hidden;
             }
 
-            table, table * {
+            table, table *, .panel, .panel * {
                 visibility: visible;
             }
 
-            table {
-                position: absolute;
+            table, .panel {
+                position: relative;
                 top: 0;
                 left: 0;
             }
@@ -59,6 +89,7 @@ $query = $dbconnect->query("
             }
         }
 
+
     </style>
 </head>
 <body>
@@ -67,8 +98,19 @@ $query = $dbconnect->query("
             <h1><strong>Hasil Transaksi</strong></h1>
         </div>
 
-        <div class="form-group">
-            <button onclick="window.print()" class="btn btn-custom1">Cetak Hasil Transaksi</button>
+        <div class="form-group mt-3">
+            <form method="GET" class="form-inline">
+                
+                <label for="tanggal_awal">Dari: </label>
+                <input type="date" name="tanggal_awal" id="tanggal_awal" value="<?= $tanggal_awal ?>" class="form-control mx-2" required>
+
+                <label for="tanggal_akhir">Sampai: </label>
+                <input type="date" name="tanggal_akhir" id="tanggal_akhir" value="<?= $tanggal_akhir ?>" class="form-control mx-2" required>
+
+                <button type="submit" class="btn btn-primary btn-sm">Tampilkan</button>
+                <a href="hasil_transaksi.php" class="btn btn-default btn-sm">Reset</a>
+                <button onclick="window.print()" class="btn btn-custom1" style="margin-left: 10px;">Cetak Hasil Transaksi</button>
+            </form>
         </div>
     
         <!-- Struktur kondisional dlm PHP utk memeriksa apakah hasil query berisi data/tidak.
@@ -83,7 +125,8 @@ $query = $dbconnect->query("
                         <th>Total</th>
                         <th>Bayar</th>
                         <th>Kembali</th>
-                        <th>Metode Pembayaran</th>
+                        <th>Metode</th>
+                        <th>Status</th>
                         <th>ID Order</th>
 
                     </tr>
@@ -97,6 +140,7 @@ $query = $dbconnect->query("
                             <td><?= number_format($row['bayar'], 0, ',', '.') ?></td>
                             <td><?= number_format($row['kembali'], 0, ',', '.') ?></td>
                             <td><?= $row['payment_method'] ?></td>
+                            <td><?= $row['payment_status'] ?></td>
                             <td><?= $row['order_id'] ?></td>
 
 
@@ -104,6 +148,17 @@ $query = $dbconnect->query("
                     <?php endwhile; ?>
                 </tbody>
             </table>
+            <div class="panel panel-default">
+                <div class="panel-heading"><strong>Ringkasan</strong></div>
+                <div class="panel-body">
+                    
+                    <p><strong>Tanggal Cetak:</strong> <?= date('l, d F Y H:i:s') ?> </p>
+                    <p><strong>Total Transaksi:</strong> Rp <?= number_format($total_transaksi, 0, ',', '.') ?></p>
+                    <p><strong>Total Pengeluaran:</strong> Rp <?= number_format($total_pengeluaran, 0, ',', '.') ?></p>
+                    <p><strong>Total Pendapatan (Keuntungan Bersih):</strong> <strong style="color: green;">Rp <?= number_format($total_pendapatan, 0, ',', '.') ?></strong></p>
+                </div>
+            </div>
+
         <?php else: ?>
             <div class="alert alert-warning">Belum ada transaksi.</div>
         <?php endif; ?>
